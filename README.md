@@ -2,4 +2,4 @@
 Java Ray Tracer
 
 ## Screenshot
-![Screenshot](image.jpg)
+![Screenshot](image.png)
