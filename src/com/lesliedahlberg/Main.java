@@ -19,32 +19,34 @@ public class Main {
             }
         }
         try {
-            ImageIO.write(image, "jpg", imageFile);
+            ImageIO.write(image, "png", imageFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
-        String path = "/Users/lesliedahlberg/Desktop/image.jpg";
+        String path = "/Users/lesliedahlberg/Desktop/image.png";
         int[][] array;
         int projectionPlane = 2000;
         int width = 1920;
         int height = 1080;
 
         ArrayList<Sphere> spheres = new ArrayList<Sphere>();
-        spheres.add(new Sphere(2, -2, 5, 1));
-        spheres.add(new Sphere(-2, 2, 5, 1));
-        spheres.add(new Sphere(0, 0, 10, 5));
-        spheres.add(new Sphere(-2, -2, 3, 1));
+        spheres.add(new Sphere(0, 0, 1200, 100, 0.5f));
 
+        spheres.add(new Sphere(250, 100, 2000, 100, 0.5f));
+
+        spheres.add(new Sphere(-500, 500, 3000, 300, 0.5f));
+        spheres.add(new Sphere(500, -500, 3000, 500, 0.8f));
 
         ArrayList<Light> lights = new ArrayList<Light>();
-        lights.add(new Light(new Vector3(0, -5, 5), 1, new Color(255, 0, 0)));
-        lights.add(new Light(new Vector3(-5, -5, 5), 1, new Color(0, 255, 0)));
-
+        lights.add(new Light(new Vector3(1000, -1000, 0), 1f, new Color(255, 255, 255)));
+        lights.add(new Light(new Vector3(1000, 0, 1000), 0.5f, new Color(255, 0, 0)));
+        lights.add(new Light(new Vector3(-1000, 0, 1000), 0.5f, new Color(0, 0, 255)));
 
         RayTracer rayTracer = new RayTracer(projectionPlane, width, height, spheres, lights);
+
         array = rayTracer.trace();
         arrayToJPG(array, path);
     }
