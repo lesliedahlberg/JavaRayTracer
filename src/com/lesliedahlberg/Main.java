@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Main {
 
@@ -28,12 +29,22 @@ public class Main {
         String path = "/Users/lesliedahlberg/Desktop/image.jpg";
         int[][] array;
         int projectionPlane = 2000;
-        int width = 2000;
-        int height = 2000;
+        int width = 1920;
+        int height = 1080;
 
-        Sphere sphere = new Sphere(0, 0, 10, 3);
-        Vector3 light = new Vector3(5, -5, 5);
-        RayTracer rayTracer = new RayTracer(projectionPlane, width, height, sphere, light);
+        ArrayList<Sphere> spheres = new ArrayList<Sphere>();
+        spheres.add(new Sphere(2, -2, 5, 1));
+        spheres.add(new Sphere(-2, 2, 5, 1));
+        spheres.add(new Sphere(0, 0, 10, 5));
+        spheres.add(new Sphere(-2, -2, 3, 1));
+
+
+        ArrayList<Light> lights = new ArrayList<Light>();
+        lights.add(new Light(new Vector3(0, -5, 5), 1, new Color(255, 0, 0)));
+        lights.add(new Light(new Vector3(-5, -5, 5), 1, new Color(0, 255, 0)));
+
+
+        RayTracer rayTracer = new RayTracer(projectionPlane, width, height, spheres, lights);
         array = rayTracer.trace();
         arrayToJPG(array, path);
     }
