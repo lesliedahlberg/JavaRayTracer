@@ -12,6 +12,7 @@ public class RayTracer {
     int height;
     ArrayList<Sphere> spheres;
     ArrayList<Light> lights;
+    float radiosityCoeff = 0.5f;
 
     public RayTracer(int projectionPlane, int width, int height, ArrayList<Sphere> spheres, ArrayList<Light> lights){
         this.projectionPlane = projectionPlane;
@@ -21,31 +22,18 @@ public class RayTracer {
         this.lights = lights;
     }
 
-    private Color phong(Vector3 hitPoint, Sphere sphere, Vector3 normal){
+    private Color diffusePhong(Vector3 hitPoint, Sphere sphere, Vector3 normal){
        float r = 0, g = 0, b = 0;
 
         for (Light light : lights) {
-            float intensities = 0;
-            Vector3 toLight = light.position.subtract(hitPoint);
+            Vector3 toLight = new Vector3(hitPoint, light.position);
             toLight.normalize();
-            float diffuse = Math.max(0, normal.dot(toLight));
+            float intensity = Math.max(0, normal.dot(toLight));
 
-            float ambient = (float) 0;
-
-            Vector3 V = hitPoint.getNegative();
-            V.normalize();
-            Vector3 R = normal.multiply(2*toLight.dot(normal)).subtract(toLight);
-            float specular = (float) Math.pow(Math.max(R.dot(V), 0), 32);
-
-            Vector3 len = light.position.subtract(hitPoint);
-            float attenuation = (float) (2000/Math.sqrt(len.x*len.x + len.y*len.y + len.z*len.z));
-
-            if(!inShadow(new Ray(hitPoint, toLight))){
-                intensities += Math.max(0, Math.min(1, (specular/10+diffuse+ambient)*light.intensity)) * attenuation;
-
-                r += (intensities * light.color.getRed()/255);
-                g += (intensities * light.color.getGreen()/255);
-                b += (intensities * light.color.getBlue()/255);
+            if(!pointInShadow(new Ray(hitPoint, toLight))){
+                r += sphere.color.getRed()/255 * light.color.getRed()/255 * intensity * light.intensity;
+                g += sphere.color.getGreen()/255 * light.color.getGreen()/255 * intensity * light.intensity;
+                b += sphere.color.getBlue()/255 * light.color.getBlue()/255 * intensity * light.intensity;
             }
         }
         r = Math.min(r, 1);
@@ -55,11 +43,11 @@ public class RayTracer {
         return new Color(r, b, g);
     }
 
-    private boolean inShadow(Ray ray){
-        ray.origin = ray.origin.add(ray.direction.multiply(0.1f));
+    private boolean pointInShadow(Ray ray){
+        ray.origin = ray.origin.add(ray.direction.multiply(1));
         for (Sphere sphere : spheres) {
             if (sphere.hit(ray) != -1){
-                return true;
+                return false;
             }
         }
         return false;
@@ -69,55 +57,58 @@ public class RayTracer {
         if (depth <= 0)
             return new Color(0, 0, 0);
         float t = -1;
-        Sphere s = new Sphere(0, 0, 0, 0, 0);
+        Sphere hitSphere = new Sphere(0, 0, 0, 0, Color.BLACK, 1);
         for (Sphere sphere : spheres) {
             float t0 = sphere.hit(ray);
             if (t0 >= 0 && (t0 < t || t == -1)){
                 t = t0;
-                s = sphere;
+                hitSphere = sphere;
             }
         }
         if(t >= 0){
             Vector3 hitPoint = ray.origin.add(ray.direction.multiply(t));
-            Vector3 normal = hitPoint.subtract(s.center);
+            Vector3 normal = new Vector3(hitSphere.center, hitPoint);
             normal.normalize();
-            Color phong = phong(hitPoint, s, normal);
-
             Vector3 toEye = hitPoint.getNegative();
             toEye.normalize();
             Vector3 reflectedVector = normal.multiply(2*toEye.dot(normal)).subtract(toEye);
             reflectedVector.normalize();
 
-            Color reflectedColor = traceRay(new Ray(hitPoint, reflectedVector), depth-1);
-            //Color reflectedColor = new Color(0, 0, 0);
+            Color diffuse = diffusePhong(hitPoint, hitSphere, normal);
+            Color specular = traceRay(new Ray(hitPoint.add(normal), reflectedVector), depth-1);
 
-            float r = phong.getRed()*(1-s.reflectance) + reflectedColor.getRed()*(s.reflectance);
-            float g = phong.getGreen()*(1-s.reflectance) + reflectedColor.getGreen()*(s.reflectance);
-            float b = phong.getBlue()*(1-s.reflectance) + reflectedColor.getBlue()*(s.reflectance);
+            float red = diffuse.getRed() + specular.getRed();
+            float green = diffuse.getGreen() + specular.getGreen();
+            float blue = diffuse.getBlue() + specular.getBlue();
 
+            Color opacity = new Color(0, 0, 0);
+            if(hitSphere.opacity < 1){
+                if(ray.direction.dot(normal)>0){
+                    opacity = traceRay(new Ray(hitPoint.add(normal), ray.direction), depth-1);
+                }else {
+                    opacity = traceRay(new Ray(hitPoint.add(normal.getNegative()), ray.direction), depth-1);
+                }
 
+            }
 
-            r = Math.min(r, 255);
-            g = Math.min(g, 255);
-            b = Math.min(b, 255);
+            int r = Math.round(Math.min(red*hitSphere.opacity + opacity.getRed()*(1-hitSphere.opacity), 255));
+            int g = Math.round(Math.min(green*hitSphere.opacity + opacity.getGreen()*(1-hitSphere.opacity), 255));
+            int b = Math.round(Math.min(blue*hitSphere.opacity + opacity.getBlue()*(1-hitSphere.opacity), 255));
 
-
-
-            return new Color(Math.round(r), Math.round(g), Math.round(b));
+            return new Color(r, g, b);
 
         }else {
             return new Color(0, 0, 0);
         }
     }
 
-    public int[][] trace(){
+    public int[][] renderImage(){
         int[][] image = new int[width][height];
         for (int i = -width/2, x = 0; i < width/2; i++, x++){
             for (int j = -height/2, y = 0; j < height/2; j++, y++){
                 Ray eyeRay = new Ray(new Vector3(0, 0, 0), new Vector3(i, j, projectionPlane));
                 eyeRay.direction.normalize();
-                image[x][y] = traceRay(eyeRay, 10).getRGB();
-
+                image[x][y] = traceRay(eyeRay, 5).getRGB();
             }
         }
         return image;

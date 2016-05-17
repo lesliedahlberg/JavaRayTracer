@@ -33,21 +33,26 @@ public class Main {
         int height = 1080;
 
         ArrayList<Sphere> spheres = new ArrayList<Sphere>();
-        spheres.add(new Sphere(0, 0, 1200, 100, 0.5f));
 
-        spheres.add(new Sphere(250, 100, 2000, 100, 0.5f));
+        spheres.add(new Sphere(-250, 0, 2000, 250, Color.BLUE, 0.5f));
+        spheres.add(new Sphere(250, 0, 2000, 250, Color.GREEN, 0.5f));
+        spheres.add(new Sphere(-500, 250, 4000, 1000, Color.RED, 1));
 
-        spheres.add(new Sphere(-500, 500, 3000, 300, 0.5f));
-        spheres.add(new Sphere(500, -500, 3000, 500, 0.8f));
+        //spheres.add(new Sphere(0, 0, 2000, 100, Color.BLUE));
+        //spheres.add(new Sphere(-1000, 0, 2000, 500, Color.WHITE));
+        //spheres.add(new Sphere(1000, 0, 5000, 1000, Color.ORANGE));
+        //spheres.add(new Sphere(0, 0, 100000, 100000, Color.yellow));
+
 
         ArrayList<Light> lights = new ArrayList<Light>();
-        lights.add(new Light(new Vector3(1000, -1000, 0), 1f, new Color(255, 255, 255)));
-        lights.add(new Light(new Vector3(1000, 0, 1000), 0.5f, new Color(255, 0, 0)));
-        lights.add(new Light(new Vector3(-1000, 0, 1000), 0.5f, new Color(0, 0, 255)));
+        lights.add(new Light(new Vector3(1000, -1000, 1000), 1, new Color(255, 255, 255)));
+
+
+
 
         RayTracer rayTracer = new RayTracer(projectionPlane, width, height, spheres, lights);
 
-        array = rayTracer.trace();
+        array = rayTracer.renderImage();
         arrayToJPG(array, path);
     }
 }

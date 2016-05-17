@@ -1,5 +1,7 @@
 package com.lesliedahlberg;
 
+
+import java.awt.*;
 import java.util.Vector;
 
 /**
@@ -8,11 +10,14 @@ import java.util.Vector;
 public class Sphere {
     Vector3 center;
     int radius;
-    float reflectance;
-    public Sphere(int x, int y, int z, int r, float ref){
+    float opacity = 1;
+    Color color;
+    public Sphere(int x, int y, int z, int r, Color color, float opacity){
         center = new Vector3(x, y, z);
         radius = r;
-        reflectance = ref;
+        this.opacity = opacity;
+
+        this.color = color;
     }
 
     public float hit(Ray eyeRay) {
