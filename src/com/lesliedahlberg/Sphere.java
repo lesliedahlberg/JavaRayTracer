@@ -7,7 +7,7 @@ import java.util.Vector;
 /**
  * Created by lesliedahlberg on 17/05/16.
  */
-public class Sphere {
+public class Sphere extends Shape{
     Vector3 center;
     int radius;
     float opacity = 1;
@@ -18,6 +18,20 @@ public class Sphere {
         this.opacity = opacity;
 
         this.color = color;
+    }
+
+    public Vector3 normal(Vector3 hitPoint){
+        return new Vector3(center, hitPoint);
+    }
+
+    @Override
+    public float Opacity() {
+        return opacity;
+    }
+
+    @Override
+    public Color Color() {
+        return color;
     }
 
     public float hit(Ray eyeRay) {

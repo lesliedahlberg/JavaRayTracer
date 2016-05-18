@@ -32,25 +32,22 @@ public class Main {
         int width = 1920;
         int height = 1080;
 
-        ArrayList<Sphere> spheres = new ArrayList<Sphere>();
+        ArrayList<Shape> shapes = new ArrayList<Shape>();
 
-        spheres.add(new Sphere(-250, 0, 2000, 250, Color.BLUE, 0.5f));
-        spheres.add(new Sphere(250, 0, 2000, 250, Color.GREEN, 0.5f));
-        spheres.add(new Sphere(-500, 250, 4000, 1000, Color.RED, 1));
+        shapes.add(new Sphere(0, 0, 2000, 100, Color.WHITE, 1));
+        shapes.add(new Plane(new Vector3(0, 1, 0), new Vector3(0, 100, 0), Color.WHITE, 1));
 
-        //spheres.add(new Sphere(0, 0, 2000, 100, Color.BLUE));
-        //spheres.add(new Sphere(-1000, 0, 2000, 500, Color.WHITE));
-        //spheres.add(new Sphere(1000, 0, 5000, 1000, Color.ORANGE));
-        //spheres.add(new Sphere(0, 0, 100000, 100000, Color.yellow));
 
 
         ArrayList<Light> lights = new ArrayList<Light>();
-        lights.add(new Light(new Vector3(1000, -1000, 1000), 1, new Color(255, 255, 255)));
+        lights.add(new Light(new Vector3(2000, -2000, 2000), 0.2f, Color.WHITE));
+        lights.add(new Light(new Vector3(0, -2000, 0), 0.2f, Color.WHITE));
 
 
 
 
-        RayTracer rayTracer = new RayTracer(projectionPlane, width, height, spheres, lights);
+
+        RayTracer rayTracer = new RayTracer(projectionPlane, width, height, shapes, lights);
 
         array = rayTracer.renderImage();
         arrayToJPG(array, path);

@@ -10,30 +10,29 @@ public class RayTracer {
     int projectionPlane;
     int width;
     int height;
-    ArrayList<Sphere> spheres;
+    ArrayList<Shape> shapes;
     ArrayList<Light> lights;
-    float radiosityCoeff = 0.5f;
 
-    public RayTracer(int projectionPlane, int width, int height, ArrayList<Sphere> spheres, ArrayList<Light> lights){
+    public RayTracer(int projectionPlane, int width, int height, ArrayList<Shape> shapes, ArrayList<Light> lights){
         this.projectionPlane = projectionPlane;
         this.width = width;
         this.height = height;
-        this.spheres = spheres;
+        this.shapes = shapes;
         this.lights = lights;
     }
 
-    private Color diffusePhong(Vector3 hitPoint, Sphere sphere, Vector3 normal){
+    private Color diffusePhong(Vector3 hitPoint, Shape shape, Vector3 normal){
        float r = 0, g = 0, b = 0;
 
         for (Light light : lights) {
             Vector3 toLight = new Vector3(hitPoint, light.position);
             toLight.normalize();
             float intensity = Math.max(0, normal.dot(toLight));
-
+            Shape s = shape;
             if(!pointInShadow(new Ray(hitPoint, toLight))){
-                r += sphere.color.getRed()/255 * light.color.getRed()/255 * intensity * light.intensity;
-                g += sphere.color.getGreen()/255 * light.color.getGreen()/255 * intensity * light.intensity;
-                b += sphere.color.getBlue()/255 * light.color.getBlue()/255 * intensity * light.intensity;
+                r += shape.Color().getRed()/255 * light.color.getRed()/255 * intensity * light.intensity;
+                g += shape.Color().getGreen()/255 * light.color.getGreen()/255 * intensity * light.intensity;
+                b += shape.Color().getBlue()/255 * light.color.getBlue()/255 * intensity * light.intensity;
             }
         }
         r = Math.min(r, 1);
@@ -45,8 +44,8 @@ public class RayTracer {
 
     private boolean pointInShadow(Ray ray){
         ray.origin = ray.origin.add(ray.direction.multiply(1));
-        for (Sphere sphere : spheres) {
-            if (sphere.hit(ray) != -1){
+        for (Shape shape : shapes) {
+            if (shape.hit(ray) != -1){
                 return false;
             }
         }
@@ -57,24 +56,25 @@ public class RayTracer {
         if (depth <= 0)
             return new Color(0, 0, 0);
         float t = -1;
-        Sphere hitSphere = new Sphere(0, 0, 0, 0, Color.BLACK, 1);
-        for (Sphere sphere : spheres) {
-            float t0 = sphere.hit(ray);
+        Shape hitShape = new Sphere(0, 0, 0, 0, Color.BLACK, 1);
+        for (Shape shape : shapes) {
+            float t0 = shape.hit(ray);
             if (t0 >= 0 && (t0 < t || t == -1)){
                 t = t0;
-                hitSphere = sphere;
+                hitShape = shape;
             }
         }
         if(t >= 0){
             Vector3 hitPoint = ray.origin.add(ray.direction.multiply(t));
-            Vector3 normal = new Vector3(hitSphere.center, hitPoint);
+            Vector3 normal = hitShape.normal(hitPoint);
+
             normal.normalize();
             Vector3 toEye = hitPoint.getNegative();
             toEye.normalize();
             Vector3 reflectedVector = normal.multiply(2*toEye.dot(normal)).subtract(toEye);
             reflectedVector.normalize();
 
-            Color diffuse = diffusePhong(hitPoint, hitSphere, normal);
+            Color diffuse = diffusePhong(hitPoint, hitShape, normal);
             Color specular = traceRay(new Ray(hitPoint.add(normal), reflectedVector), depth-1);
 
             float red = diffuse.getRed() + specular.getRed();
@@ -82,7 +82,7 @@ public class RayTracer {
             float blue = diffuse.getBlue() + specular.getBlue();
 
             Color opacity = new Color(0, 0, 0);
-            if(hitSphere.opacity < 1){
+            if(hitShape.Opacity() < 1){
                 if(ray.direction.dot(normal)>0){
                     opacity = traceRay(new Ray(hitPoint.add(normal), ray.direction), depth-1);
                 }else {
@@ -91,9 +91,9 @@ public class RayTracer {
 
             }
 
-            int r = Math.round(Math.min(red*hitSphere.opacity + opacity.getRed()*(1-hitSphere.opacity), 255));
-            int g = Math.round(Math.min(green*hitSphere.opacity + opacity.getGreen()*(1-hitSphere.opacity), 255));
-            int b = Math.round(Math.min(blue*hitSphere.opacity + opacity.getBlue()*(1-hitSphere.opacity), 255));
+            int r = Math.round(Math.min(red*hitShape.Opacity() + opacity.getRed()*(1-hitShape.Opacity()), 255));
+            int g = Math.round(Math.min(green*hitShape.Opacity() + opacity.getGreen()*(1-hitShape.Opacity()), 255));
+            int b = Math.round(Math.min(blue*hitShape.Opacity() + opacity.getBlue()*(1-hitShape.Opacity()), 255));
 
             return new Color(r, g, b);
 
